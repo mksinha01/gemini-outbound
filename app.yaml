@@ -1,0 +1,115 @@
+name: outbound-ai-app
+region: blr
+services:
+  - name: outboundai-web
+    dockerfile_path: Dockerfile
+    http_port: 8080
+    run_command: uvicorn server:app --host 0.0.0.0 --port ${PORT}
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    routes:
+      - path: /
+
+workers:
+  - name: outboundai-worker
+    dockerfile_path: Dockerfile
+    run_command: python agent.py start
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+
+envs:
+  # ── LiveKit Cloud ──────────────────────────────────────
+  - key: LIVEKIT_URL
+    value: wss://mks-g7jf2zqv.livekit.cloud
+    scope: RUN_AND_BUILD_TIME
+  - key: LIVEKIT_API_KEY
+    value: API4A7B8bEXHFkW
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: LIVEKIT_API_SECRET
+    value: gjh2gidPFPRfMGFnq6sQ9kDv8jffBM94m84bIJVOzcHB
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+
+  # ── Google Gemini ──────────────────────────────────────
+  - key: GOOGLE_API_KEY
+    value: AIzaSyBQXaEup1IDp4mNtg3UT17BcEtlKwgts9E
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: GEMINI_MODEL
+    value: gemini-3.1-flash-live-preview
+    scope: RUN_AND_BUILD_TIME
+  - key: GEMINI_TTS_VOICE
+    value: Aoede
+    scope: RUN_AND_BUILD_TIME
+  - key: USE_GEMINI_REALTIME
+    value: "true"
+    scope: RUN_AND_BUILD_TIME
+
+  # ── Vobiz SIP Telephony ────────────────────────────────
+  - key: VOBIZ_SIP_DOMAIN
+    value: bddaa41e.sip.vobiz.ai
+    scope: RUN_AND_BUILD_TIME
+  - key: VOBIZ_USERNAME
+    value: manoj
+    scope: RUN_AND_BUILD_TIME
+  - key: VOBIZ_PASSWORD
+    value: Mks@997753
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: VOBIZ_OUTBOUND_NUMBER
+    value: "+911171366938"
+    scope: RUN_AND_BUILD_TIME
+  - key: OUTBOUND_TRUNK_ID
+    value: bddaa41e-e364-4532-a6c8-1d4bd656d0a0
+    scope: RUN_AND_BUILD_TIME
+  - key: DEFAULT_TRANSFER_NUMBER
+    value: "+911171366938"
+    scope: RUN_AND_BUILD_TIME
+
+  # ── Supabase ───────────────────────────────────────────
+  - key: SUPABASE_URL
+    value: https://pglsoqoljzedcgmsvced.supabase.co
+    scope: RUN_AND_BUILD_TIME
+  - key: SUPABASE_SERVICE_KEY
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnbHNvcW9sanplZGNnbXN2Y2VkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDY3NjAwNCwiZXhwIjoyMDk2MjUyMDA0fQ.7LkJvW7K5-QR8_zbpCiiabBhuN7HUeGH4VqrCdw1c_4
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+
+  # ── S3 / Supabase Storage (call recordings) ────────────
+  - key: S3_ACCESS_KEY_ID
+    value: 9d2032fbfe8063d72918b6c49fa51aaf
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: S3_SECRET_ACCESS_KEY
+    value: b733a2b7f3bbbb9e3415c147f5ad59bc366fbc98f380c3e0e06af1af391e44b1
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: S3_ENDPOINT_URL
+    value: https://pglsoqoljzedcgmsvced.supabase.co/storage/v1/s3
+    scope: RUN_AND_BUILD_TIME
+  - key: S3_REGION
+    value: ap-southeast-1
+    scope: RUN_AND_BUILD_TIME
+  - key: S3_BUCKET
+    value: call-recordings
+    scope: RUN_AND_BUILD_TIME
+
+  # ── Optional STT / TTS ────────────────────────────────
+  - key: DEEPGRAM_API_KEY
+    value: c544e2e23d7fd2064934f583b0e02af8f3145767
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: SARVAM_API_KEY
+    value: sk_ocumzlwh_zmtpzxiKtQIwHwCVKsWHmSk7
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: CARTESIA_API_KEY
+    value: sk_car_ApnDJgwmX62AgPyPg7paKZ
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+
+  # ── Cal.com (optional) ────────────────────────────────
+  - key: CALCOM_TIMEZONE
+    value: Asia/Kolkata
+    scope: RUN_AND_BUILD_TIME
