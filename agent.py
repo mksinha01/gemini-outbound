@@ -142,7 +142,6 @@ def _build_session(tools: list, system_prompt: str) -> AgentSession:
         realtime_kwargs: dict = dict(model=gemini_model, voice=gemini_voice, instructions=system_prompt)
         if _realtime_input_cfg is not None:
             realtime_kwargs["realtime_input_config"]      = _realtime_input_cfg
-            realtime_kwargs["session_resumption"]         = _session_resumption_cfg
             realtime_kwargs["context_window_compression"] = _ctx_compression_cfg
 
         return AgentSession(llm=RealtimeClass(**realtime_kwargs), tools=tools)
@@ -247,30 +246,42 @@ async def entrypoint(ctx: agents.JobContext) -> None:
         await _log("info", f"Call ANSWERED — {phone_number} picked up, starting AI session now")
 
     # ── Build and start Gemini Live ──────────────────────────────────────────
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-live-preview")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
     await _log("info", f"Building AI session — model={gemini_model}")
     active_tools = tool_ctx.build_tool_list(enabled_tools)
     await _log("info", f"Tools loaded: {[t.__name__ for t in active_tools]}")
-    session = _build_session(tools=active_tools, system_prompt=system_prompt)
+    try:
+        session = _build_session(tools=active_tools, system_prompt=system_prompt)
+    except Exception as e:
+        await _log("error", f"_build_session FAILED: {str(e)}", detail=str(type(e)))
+        ctx.shutdown()
+        return
+    try:
+        if _HAS_ROOM_OPTIONS:
+            from livekit.agents import RoomOptions as _RO
+            _session_kwargs = dict(
+                room=ctx.room,
+                agent=OutboundAssistant(instructions=system_prompt),
+                room_options=_RO(input_options=RoomInputOptions(noise_cancellation=noise_cancellation.BVCTelephony())),
+            )
+        else:
+            _session_kwargs = dict(
+                room=ctx.room,
+                agent=OutboundAssistant(instructions=system_prompt),
+                room_input_options=RoomInputOptions(noise_cancellation=noise_cancellation.BVCTelephony()),
+            )
+    except Exception as e:
+        await _log("error", f"_session_kwargs FAILED: {str(e)}", detail=str(type(e)))
+        ctx.shutdown()
+        return
 
-    # NEVER use close_on_disconnect=True with SIP — drops on any audio blip
-    if _HAS_ROOM_OPTIONS:
-        from livekit.agents import RoomOptions as _RO
-        _session_kwargs = dict(
-            room=ctx.room,
-            agent=OutboundAssistant(instructions=system_prompt),
-            room_options=_RO(input_options=RoomInputOptions(noise_cancellation=noise_cancellation.BVCTelephony())),
-        )
-    else:
-        _session_kwargs = dict(
-            room=ctx.room,
-            agent=OutboundAssistant(instructions=system_prompt),
-            room_input_options=RoomInputOptions(noise_cancellation=noise_cancellation.BVCTelephony()),
-        )
-
-    await session.start(**_session_kwargs)
-    await _log("info", "Agent session started — AI ready, generating greeting")
-
+    try:
+        await session.start(**_session_kwargs)
+        await _log("info", "Agent session started — AI ready, generating greeting")
+    except Exception as e:
+        await _log("error", f"session.start FAILED: {str(e)}", detail=str(type(e)))
+        ctx.shutdown()
+        return
     # ── Optional S3 recording ────────────────────────────────────────────────
     if phone_number:
         _aws_key    = os.getenv("S3_ACCESS_KEY_ID") or os.getenv("AWS_ACCESS_KEY_ID", "")

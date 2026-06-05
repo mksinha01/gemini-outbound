@@ -116,6 +116,10 @@ class StatusRequest(BaseModel):
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return JSONResponse(status_code=204, content="")
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
     html_path = Path(__file__).parent / "ui" / "index.html"
