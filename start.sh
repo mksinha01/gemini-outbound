@@ -14,7 +14,7 @@ APP_PORT="${PORT:-8000}"
 
 echo "📋 Configuration:"
 echo "   LiveKit:  ${LIVEKIT_URL:-NOT SET}"
-echo "   Gemini:   ${GEMINI_MODEL:-gemini-3.1-flash-live-preview}"
+echo "   Gemini:   ${GEMINI_MODEL:-gemini-2.0-flash-exp}"
 echo "   Supabase: ${SUPABASE_URL:-NOT SET}"
 echo "   Port:     ${APP_PORT}"
 

@@ -37,7 +37,7 @@ envs:
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: GEMINI_MODEL
-    value: gemini-3.1-flash-live-preview
+    value: gemini-2.0-flash-exp
     scope: RUN_AND_BUILD_TIME
   - key: GEMINI_TTS_VOICE
     value: Aoede
