@@ -57,15 +57,15 @@ def init_db() -> None:
     url = os.getenv("SUPABASE_URL", SUPABASE_URL)
     key = os.getenv("SUPABASE_SERVICE_KEY", SUPABASE_KEY)
     if not url or not key:
-        print("⚠️  SUPABASE_URL or SUPABASE_SERVICE_KEY not set.")
+        print("[WARNING] SUPABASE_URL or SUPABASE_SERVICE_KEY not set.")
         return
     try:
         db = _sdb()
         db.table("settings").select("key").limit(1).execute()
-        print("✅ Supabase connected")
+        print("[SUCCESS] Supabase connected")
     except Exception as exc:
-        print(f"⚠️  Supabase connection failed: {exc}")
-        print("   Run supabase_schema.sql in your Supabase Dashboard → SQL Editor")
+        print(f"[ERROR] Supabase connection failed: {exc}")
+        print("   Run supabase_schema.sql in your Supabase Dashboard -> SQL Editor")
 
 
 # ── Settings ─────────────────────────────────────────────────────────────────

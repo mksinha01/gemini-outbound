@@ -223,7 +223,8 @@ async def entrypoint(ctx: agents.JobContext) -> None:
 
     # ── Dial — MUST come before session.start() ──────────────────────────────
     if phone_number:
-        trunk_id = os.getenv("OUTBOUND_TRUNK_ID")
+        from db import get_setting
+        trunk_id = await get_setting("OUTBOUND_TRUNK_ID") or os.getenv("OUTBOUND_TRUNK_ID")
         if not trunk_id:
             await _log("error", "OUTBOUND_TRUNK_ID not set — cannot place outbound call")
             ctx.shutdown()
