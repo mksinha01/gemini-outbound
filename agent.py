@@ -310,10 +310,11 @@ async def entrypoint(ctx: agents.JobContext) -> None:
 
     # ── Greeting ─────────────────────────────────────────────────────────────
     # gemini-3.1 and gemini-2.5 native-audio speak autonomously from system prompt.
-    # generate_reply() is blocked by the plugin for these models — skip it entirely.
-    _active_model = os.getenv("GEMINI_MODEL", "")
-    if "3.1" in _active_model or "2.5" in _active_model:
-        await _log("info", "Gemini native-audio: model will greet autonomously from system prompt")
+    # generate_reply() is NOT supported for these models — skip it entirely.
+    # Use same default as _build_session so the check works even if env var is unset.
+    _active_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+    if "3.1" in _active_model or "2.5" in _active_model or "live-preview" in _active_model:
+        await _log("info", f"Gemini native-audio ({_active_model}): speaks autonomously — skipping generate_reply")
     else:
         greeting = (
             f"The call just connected. Greet the lead and ask if you're speaking with {lead_name}."
