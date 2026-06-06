@@ -8,7 +8,7 @@ services:
       deploy_on_push: true
     dockerfile_path: Dockerfile
     http_port: 8080
-    run_command: uvicorn server:app --host 0.0.0.0 --port ${PORT}
+    run_command: sh -c "uvicorn server:app --host 0.0.0.0 --port $PORT"
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     routes:
@@ -28,24 +28,24 @@ workers:
 envs:
   # ── LiveKit Cloud ──────────────────────────────────────
   - key: LIVEKIT_URL
-    value: wss://mks-g7jf2zqv.livekit.cloud
+    value: wss://agrnt-mewy3qis.livekit.cloud
     scope: RUN_AND_BUILD_TIME
   - key: LIVEKIT_API_KEY
-    value: API4A7B8bEXHFkW
+    value: APImD2woAY8Kf7W
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: LIVEKIT_API_SECRET
-    value: gjh2gidPFPRfMGFnq6sQ9kDv8jffBM94m84bIJVOzcHB
+    value: tfpbLwfM7mT3mhrVEQ5XQuxLfBZBy6McmPw6OY4Kz2eB
     scope: RUN_AND_BUILD_TIME
     type: SECRET
 
   # ── Google Gemini ──────────────────────────────────────
   - key: GOOGLE_API_KEY
-    value: AIzaSyBQXaEup1IDp4mNtg3UT17BcEtlKwgts9E
+    value: REPLACE_WITH_YOUR_GOOGLE_API_KEY  # Set this in DO Console → App Settings → Environment Variables
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: GEMINI_MODEL
-    value: gemini-2.0-flash-exp
+    value: gemini-3.1-flash-live-preview
     scope: RUN_AND_BUILD_TIME
   - key: GEMINI_TTS_VOICE
     value: Aoede
