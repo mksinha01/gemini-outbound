@@ -144,6 +144,16 @@ def _build_session(tools: list, system_prompt: str) -> AgentSession:
             realtime_kwargs["realtime_input_config"]      = _realtime_input_cfg
             realtime_kwargs["context_window_compression"] = _ctx_compression_cfg
 
+        # session_resumption is only supported in newer plugin versions — try it safely
+        if _session_resumption_cfg is not None:
+            try:
+                return AgentSession(
+                    llm=RealtimeClass(**realtime_kwargs, session_resumption=_session_resumption_cfg),
+                    tools=tools,
+                )
+            except TypeError:
+                logger.warning("session_resumption not supported by this plugin version — skipping")
+
         return AgentSession(llm=RealtimeClass(**realtime_kwargs), tools=tools)
 
     if _google_llm is None:
@@ -178,6 +188,8 @@ async def entrypoint(ctx: agents.JobContext) -> None:
     lead_name = "there"
     business_name = "our company"
     service_type = "our service"
+    agent_name = "Alex"
+    prompt_type = "default"
     custom_prompt: Optional[str] = None
     voice_override: Optional[str] = None
     model_override: Optional[str] = None
@@ -190,6 +202,8 @@ async def entrypoint(ctx: agents.JobContext) -> None:
             lead_name      = data.get("lead_name", lead_name)
             business_name  = data.get("business_name", business_name)
             service_type   = data.get("service_type", service_type)
+            agent_name     = data.get("agent_name", agent_name)
+            prompt_type    = data.get("prompt_type", prompt_type)
             custom_prompt  = data.get("system_prompt")
             voice_override = data.get("voice_override")
             model_override = data.get("model_override")
@@ -199,8 +213,14 @@ async def entrypoint(ctx: agents.JobContext) -> None:
 
     await _log("info", f"Call job received — phone={phone_number} lead={lead_name} biz={business_name}")
 
-    system_prompt = build_prompt(lead_name=lead_name, business_name=business_name,
-                                  service_type=service_type, custom_prompt=custom_prompt)
+    system_prompt = build_prompt(
+        lead_name=lead_name,
+        business_name=business_name,
+        service_type=service_type,
+        agent_name=agent_name,
+        custom_prompt=custom_prompt,
+        prompt_type=prompt_type,
+    )
     tool_ctx = AppointmentTools(ctx, phone_number, lead_name)
 
     if voice_override:
@@ -240,7 +260,37 @@ async def entrypoint(ctx: agents.JobContext) -> None:
                 )
             )
         except Exception as exc:
-            await _log("error", f"SIP dial FAILED for {phone_number}: {exc}")
+            exc_str = str(exc)
+            # ── Classify SIP responses as call outcomes, not errors ───────────
+            # 486 Busy Here         → lead is on another call, retry later
+            # 480 Temporarily Unavailable → unreachable (switched off / out of coverage)
+            # 487 Request Terminated → caller hung up before answered
+            # 503 Service Unavailable → carrier/trunk issue
+            sip_outcomes = {
+                "486": ("busy",      "SIP 486 Busy Here — lead is on another call"),
+                "480": ("no_answer", "SIP 480 Temporarily Unavailable — device unreachable"),
+                "487": ("no_answer", "SIP 487 Request Terminated — call cancelled"),
+                "503": ("failed",    "SIP 503 Service Unavailable — carrier error"),
+            }
+            sip_outcome, sip_reason = None, None
+            for code, (outcome, reason) in sip_outcomes.items():
+                if f"sip status: {code}" in exc_str or f"sip_status_code': '{code}'" in exc_str:
+                    sip_outcome, sip_reason = outcome, reason
+                    break
+
+            if sip_outcome:
+                await _log("warning", f"Call ended before answer — {sip_reason} ({phone_number})")
+                try:
+                    from db import log_call
+                    await log_call(
+                        phone_number=phone_number, lead_name=lead_name,
+                        outcome=sip_outcome, reason=sip_reason,
+                        duration_seconds=0,
+                    )
+                except Exception:
+                    pass
+            else:
+                await _log("error", f"SIP dial FAILED for {phone_number}: {exc_str}")
             ctx.shutdown()
             return
         await _log("info", f"Call ANSWERED — {phone_number} picked up, starting AI session now")
@@ -309,20 +359,32 @@ async def entrypoint(ctx: agents.JobContext) -> None:
                 await _log("warning", f"Recording start failed (non-fatal): {_exc}")
 
     # ── Greeting ─────────────────────────────────────────────────────────────
-    # gemini-3.1 and gemini-2.5 native-audio speak autonomously from system prompt.
-    # generate_reply() is NOT supported for these models — skip it entirely.
-    # Use same default as _build_session so the check works even if env var is unset.
+    # Native-audio models (gemini-3.x / gemini-2.5 / live-preview) do NOT support
+    # generate_reply() in older plugin versions. We try it anyway because:
+    #  - Without a kick-start the model often stays silent waiting for input.
+    #  - If the model/plugin doesn't support it, the except swallows the error safely.
     _active_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
-    if "3.1" in _active_model or "2.5" in _active_model or "live-preview" in _active_model:
-        await _log("info", f"Gemini native-audio ({_active_model}): speaks autonomously — skipping generate_reply")
-    else:
-        greeting = (
-            f"The call just connected. Greet the lead and ask if you're speaking with {lead_name}."
-            if phone_number else "Greet the caller warmly."
-        )
-        try:
-            await session.generate_reply(instructions=greeting)
-        except Exception as _gr_exc:
+    _is_native_audio = any(k in _active_model for k in ("3.1", "3.0", "2.5", "live-preview"))
+
+    greeting_instruction = (
+        f"The call just connected and {lead_name} has answered. "
+        f"Speak immediately — say 'Hi, am I speaking with {lead_name}?' right now. Do NOT wait."
+        if phone_number
+        else "The call just connected. Greet the caller warmly and introduce yourself immediately."
+    )
+
+    if _is_native_audio:
+        await _log("info", f"Native-audio model ({_active_model}) — attempting generate_reply kick-start")
+
+    try:
+        await session.generate_reply(instructions=greeting_instruction)
+        await _log("info", "Greeting sent via generate_reply")
+    except Exception as _gr_exc:
+        _gr_msg = str(_gr_exc)
+        if _is_native_audio and ("not supported" in _gr_msg.lower() or "unsupported" in _gr_msg.lower()):
+            # Model speaks autonomously — silence is expected until the lead says something
+            await _log("info", f"generate_reply not supported for {_active_model} — model will speak on first audio input")
+        else:
             await _log("warning", f"generate_reply failed: {_gr_exc}")
 
     # ── Keep session alive until SIP participant actually leaves ─────────────
