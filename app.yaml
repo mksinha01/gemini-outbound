@@ -2,6 +2,10 @@ name: outbound-ai-app
 region: blr
 services:
   - name: outboundai-web
+    github:
+      repo: manoj00sinha/gemini-outbound
+      branch: main
+      deploy_on_push: true
     dockerfile_path: Dockerfile
     http_port: 8080
     run_command: uvicorn server:app --host 0.0.0.0 --port ${PORT}
@@ -12,6 +16,10 @@ services:
 
 workers:
   - name: outboundai-worker
+    github:
+      repo: manoj00sinha/gemini-outbound
+      branch: main
+      deploy_on_push: true
     dockerfile_path: Dockerfile
     run_command: python agent.py start
     instance_count: 1
