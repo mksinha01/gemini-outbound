@@ -110,7 +110,7 @@ def _build_session(tools: list, system_prompt: str) -> AgentSession:
 
     ⚠️ EndSensitivity MUST use full string form: END_SENSITIVITY_LOW (not .LOW — AttributeError!)
     """
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-live-preview")
     gemini_voice = os.getenv("GEMINI_TTS_VOICE", "Aoede")
     use_realtime = os.getenv("USE_GEMINI_REALTIME", "true").lower() != "false"
 
@@ -359,32 +359,34 @@ async def entrypoint(ctx: agents.JobContext) -> None:
                 await _log("warning", f"Recording start failed (non-fatal): {_exc}")
 
     # ── Greeting ─────────────────────────────────────────────────────────────
-    # Native-audio models (gemini-3.x / gemini-2.5 / live-preview) do NOT support
-    # generate_reply() in older plugin versions. We try it anyway because:
-    #  - Without a kick-start the model often stays silent waiting for input.
-    #  - If the model/plugin doesn't support it, the except swallows the error safely.
-    _active_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
-    _is_native_audio = any(k in _active_model for k in ("3.1", "3.0", "2.5", "live-preview"))
-
-    greeting_instruction = (
-        f"The call just connected and {lead_name} has answered. "
-        f"Speak immediately — say 'Hi, am I speaking with {lead_name}?' right now. Do NOT wait."
-        if phone_number
-        else "The call just connected. Greet the caller warmly and introduce yourself immediately."
-    )
+    # Rule 4: gemini-3.1-* and gemini-2.5-* are native-audio models.
+    # The livekit-plugins-google plugin BLOCKS generate_reply() for these models
+    # and raises an error. These models speak autonomously from the system prompt
+    # the moment audio starts flowing — do NOT call generate_reply() for them.
+    # The system prompt already contains "SPEAK FIRST — IMMEDIATELY".
+    #
+    # For older pipeline models (gemini-2.0-flash etc.), generate_reply() is
+    # required to kick-start the greeting, otherwise the model waits silently.
+    _active_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-live-preview")
+    _is_native_audio = any(k in _active_model for k in ("3.1", "2.5"))
 
     if _is_native_audio:
-        await _log("info", f"Native-audio model ({_active_model}) — attempting generate_reply kick-start")
-
-    try:
-        await session.generate_reply(instructions=greeting_instruction)
-        await _log("info", "Greeting sent via generate_reply")
-    except Exception as _gr_exc:
-        _gr_msg = str(_gr_exc)
-        if _is_native_audio and ("not supported" in _gr_msg.lower() or "unsupported" in _gr_msg.lower()):
-            # Model speaks autonomously — silence is expected until the lead says something
-            await _log("info", f"generate_reply not supported for {_active_model} — model will speak on first audio input")
-        else:
+        # Model speaks autonomously — generate_reply is blocked by the plugin.
+        # System prompt instructs it to say "Hi, am I speaking with {lead_name}?"
+        # the moment audio flows. Nothing to do here.
+        await _log("info", f"Native-audio model ({_active_model}) — speaks autonomously from system prompt, skipping generate_reply")
+    else:
+        # Pipeline models (gemini-2.0-flash, etc.) need an explicit kick-start.
+        greeting_instruction = (
+            f"The call just connected and {lead_name} has answered. "
+            f"Speak immediately — say 'Hi, am I speaking with {lead_name}?' right now. Do NOT wait."
+            if phone_number
+            else "The call just connected. Greet the caller warmly and introduce yourself immediately."
+        )
+        try:
+            await session.generate_reply(instructions=greeting_instruction)
+            await _log("info", "Greeting sent via generate_reply")
+        except Exception as _gr_exc:
             await _log("warning", f"generate_reply failed: {_gr_exc}")
 
     # ── Keep session alive until SIP participant actually leaves ─────────────

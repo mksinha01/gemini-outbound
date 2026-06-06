@@ -49,7 +49,7 @@ envVarGroups:
       - key: GOOGLE_API_KEY
         value:                          # AIzaSy...
       - key: GEMINI_MODEL
-        value: gemini-2.0-flash-exp
+        value: gemini-2.0-flash
       - key: GEMINI_TTS_VOICE
         value: Aoede
       - key: USE_GEMINI_REALTIME
