@@ -30,6 +30,7 @@ from db import (
     delete_agent_profile, set_default_agent_profile, get_calls_by_phone, get_campaign,
     get_contacts, get_errors, get_logs, get_setting, get_stats, init_db, log_error,
     save_settings, set_setting, update_call_notes, update_campaign_run_stats, update_campaign_status,
+    _adb,
 )
 from prompts import DEFAULT_SYSTEM_PROMPT
 
@@ -48,6 +49,25 @@ except ImportError:
     logger.warning("APScheduler not installed — campaign scheduling disabled")
 
 app = FastAPI(title="OutboundAI Dashboard", version="1.0.0")
+
+@app.middleware("http")
+async def verify_token_middleware(request: Request, call_next):
+    if request.url.path.startswith("/api/"):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return JSONResponse(status_code=401, content={"detail": "Missing or invalid authorization header"})
+        
+        token = auth_header.split(" ")[1]
+        try:
+            db_client = await _adb()
+            user_response = await db_client.auth.get_user(token)
+            if not user_response or not user_response.user:
+                raise Exception("User not found")
+        except Exception as e:
+            logger.warning(f"Auth error: {e}")
+            return JSONResponse(status_code=401, content={"detail": "Invalid authentication token"})
+            
+    return await call_next(request)
 
 
 @app.on_event("startup")
@@ -124,7 +144,11 @@ async def favicon():
 async def serve_dashboard():
     html_path = Path(__file__).parent / "ui" / "index.html"
     if html_path.exists():
-        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+        html = html_path.read_text(encoding="utf-8")
+        from db import _default
+        html = html.replace("{{SUPABASE_URL}}", _default("SUPABASE_URL"))
+        html = html.replace("{{SUPABASE_KEY}}", _default("SUPABASE_SERVICE_KEY"))
+        return HTMLResponse(content=html)
     return HTMLResponse("<h1>Dashboard not found — place index.html in ui/</h1>", status_code=404)
 
 

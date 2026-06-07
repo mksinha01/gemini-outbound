@@ -9,6 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Archivo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = '{{SUPABASE_URL}}';
+  const supabaseAnonKey = '{{SUPABASE_KEY}}';
+  
+  try {
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+  } catch (e) {
+    console.error("Supabase init failed:", e);
+  }
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -961,9 +972,43 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   border-bottom: 1px solid rgba(15,255,255,0.1);
   padding: 16px;
 }
+/* ── Firebase Auth Overlay ── */
+#auth-overlay {
+  position: fixed; inset: 0; background: var(--bg-main); z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+}
+.auth-box {
+  width: 100%; max-width: 400px; background: rgba(17,24,39,0.7); backdrop-filter: blur(16px);
+  border: 1px solid var(--border-dim); border-radius: 24px; padding: 40px; text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+.auth-box h2 { font-family: var(--font-sora); font-size: 24px; margin-bottom: 8px; color: #fff; }
+.auth-box p { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; }
+.auth-box .form-group { text-align: left; }
 </style>
 </head>
 <body>
+
+<!-- Firebase Login Overlay -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="brand-icon" style="margin: 0 auto 20px auto;"><i class="ti ti-robot" style="color:#fff;font-size:24px"></i></div>
+    <h2>Outbound<span class="gradient-text">AI</span></h2>
+    <p>Sign in to access your dashboard</p>
+    <form id="auth-form" onsubmit="event.preventDefault(); window.doLogin()">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="auth-email" required placeholder="admin@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="auth-password" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px" id="auth-btn">Sign In</button>
+      <div id="auth-err" style="color:var(--danger); font-size:12px; margin-top:12px; display:none"></div>
+    </form>
+  </div>
+</div>
 
 <!-- Background grid -->
 <div class="grid-overlay"></div>
@@ -1025,7 +1070,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         <div class="topbar-divider"></div>
         <div class="user-profile">
           <div class="user-meta">
-            <div class="user-name">Admin</div>
+            <div class="user-name" id="auth-user-email">Admin</div>
             <div class="user-role">OutboundAI Platform</div>
           </div>
           <div class="user-avatar-wrap">
@@ -1033,6 +1078,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
             <span class="user-online-dot"></span>
           </div>
         </div>
+        <button class="icon-btn" title="Logout" onclick="window.doLogout()" style="color:var(--danger); border-color:rgba(239,68,68,0.3)"><i class="ti ti-logout"></i></button>
       </div>
     </header>
 
@@ -1821,11 +1867,65 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 // CORE UTILITIES
 // ═══════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
-const api = (path, opts) => fetch(path, opts).then(r => r.json()).catch(e => ({error: e.message}));
-const apiPost  = (path, body) => fetch(path, {method:'POST',  headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-const apiPut   = (path, body) => fetch(path, {method:'PUT',   headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-const apiPatch = (path, body) => fetch(path, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-const apiDel   = path => fetch(path, {method:'DELETE'});
+
+window.authToken = null;
+const getAuthHeaders = (extra = {}) => {
+  const h = { 'Content-Type': 'application/json', ...extra };
+  if (window.authToken) h['Authorization'] = `Bearer ${window.authToken}`;
+  return h;
+};
+const getAuthOpts = (opts = {}) => {
+  const h = { ...(opts.headers || {}) };
+  if (window.authToken) h['Authorization'] = `Bearer ${window.authToken}`;
+  return { ...opts, headers: h };
+};
+
+const api = (path, opts) => fetch(path, getAuthOpts(opts)).then(r => r.json()).catch(e => ({error: e.message}));
+const apiPost  = (path, body) => fetch(path, {method:'POST',  headers:getAuthHeaders(), body:JSON.stringify(body)});
+const apiPut   = (path, body) => fetch(path, {method:'PUT',   headers:getAuthHeaders(), body:JSON.stringify(body)});
+const apiPatch = (path, body) => fetch(path, {method:'PATCH', headers:getAuthHeaders(), body:JSON.stringify(body)});
+const apiDel   = path => fetch(path, getAuthOpts({method:'DELETE'}));
+
+window.doLogin = async function() {
+  if(!window.supabaseClient) return toast('Supabase not configured. Setup supabaseUrl in index.html', 'err');
+  const e = $('auth-email').value, p = $('auth-password').value, b = $('auth-btn');
+  b.disabled = true; b.textContent = 'Signing in...';
+  const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email: e, password: p });
+  if (error) {
+    $('auth-err').textContent = error.message;
+    $('auth-err').style.display = 'block';
+  } else {
+    $('auth-err').style.display = 'none';
+  }
+  b.disabled = false; b.textContent = 'Sign In';
+};
+
+window.doLogout = async function() {
+  if(window.supabaseClient) {
+    await window.supabaseClient.auth.signOut();
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.supabaseClient) {
+    window.supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (session && session.user) {
+        window.authToken = session.access_token;
+        $('auth-user-email').textContent = session.user.email;
+        $('auth-overlay').style.display = 'none';
+        if (typeof loadStats === 'function') loadStats();
+        if (typeof loadLiveConfig === 'function') loadLiveConfig();
+        if (typeof loadAgentProfiles === 'function') loadAgentProfiles();
+      } else {
+        window.authToken = null;
+        $('auth-overlay').style.display = 'flex';
+      }
+    });
+  } else {
+    $('auth-err').textContent = 'Supabase config is missing in index.html. Edit the file to add YOUR_SUPABASE_URL, etc.';
+    $('auth-err').style.display = 'block';
+  }
+});
 
 function toast(msg, type = 'ok') {
   const el = document.createElement('div');
@@ -2582,9 +2682,9 @@ function init() {
   };
   _renderCharts(mockData);
 
-  loadStats();
-  loadLiveConfig();
-  loadAgentProfiles();
+  // loadStats();
+  // loadLiveConfig();
+  // loadAgentProfiles();
 
   setInterval(loadStats, 10000);
   setInterval(loadLiveConfig, 30000);

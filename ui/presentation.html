@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutboundAI Presentation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #0F172A;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            color: #1A202C;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .slide-container {
+            width: 1280px;
+            height: 720px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            transform-origin: center center;
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: none;
+        }
+
+        .slide-container.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom textures and accents */
+        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        .font-dm { font-family: 'DM Sans', sans-serif; }
+
+        .diagonal-stripes {
+            background-image: repeating-linear-gradient(45deg, #1A202C 0, #1A202C 1px, transparent 0, transparent 50%);
+            background-size: 14px 14px;
+        }
+
+        .hairline-border {
+            border: 1px solid rgba(26, 32, 44, 0.08);
+        }
+
+        .left-accent::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #319795, #4fd1c5);
+        }
+
+        .bg-pattern {
+            background-image: radial-gradient(#319795 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            opacity: 0.03;
+        }
+
+        .roadmap-line {
+            width: 1px;
+            background: #319795;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 7px;
+        }
+
+        .phase-dot {
+            width: 15px;
+            height: 15px;
+            background: #319795;
+            border-radius: 50%;
+            border: 4px solid white;
+            position: relative;
+            z-index: 10;
+        }
+
+        .bg-stripes {
+            background-image: linear-gradient(135deg, #f0f4f8 10%, transparent 10%, transparent 50%, #f0f4f8 50%, #f0f4f8 60%, transparent 60%, transparent 100%);
+            background-size: 10px 10px;
+            opacity: 0.3;
+        }
+
+        /* Page indicator styled minimalistically */
+        .controls-overlay {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 8px 18px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #319795;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Title Slide -->
+    <div id="slide-1" class="slide-container active">
+        <section class="relative w-full h-full bg-[#F8FAFC] overflow-hidden flex flex-row p-16 items-center justify-between">
+            <!-- Background Decorative Whitish Circles/Shapes -->
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white opacity-40 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-white opacity-40 blur-3xl pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-[500px] h-[500px] diagonal-stripes opacity-[0.02] pointer-events-none"></div>
+            
+            <!-- Left Column: Title & Subtitle -->
+            <div class="w-1/2 flex flex-col justify-between h-full relative z-10">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white hairline-border flex items-center justify-center shadow-xs">
+                            <i class="ti ti-cpu text-[#319795] text-xl"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-jakarta font-bold uppercase tracking-[0.2em] text-[#1A202C]/40">Project Outline</span>
+                            <span class="text-xs font-plex font-semibold text-[#1A202C]">Slide 01 / 07</span>
+                        </div>
+                    </div>
+                    <div class="h-8 w-[1px] bg-[#1A202C]/10"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-jakarta font-bold uppercase tracking-[0.2em] text-[#1A202C]/40">Conference</span>
+                        <span class="text-xs font-plex font-semibold text-[#1A202C]">Tech Hackathon 2024</span>
+                    </div>
+                </div>
+
+                <div class="my-auto pb-4 flex flex-col items-start">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-1 h-6 bg-[#319795]"></div>
+                        <p class="text-xs font-jakarta font-bold uppercase tracking-[0.3em] text-[#319795]">
+                            Innovative Outbound Solutions
+                        </p>
+                    </div>
+
+                    <h1 class="text-[84px] font-jakarta font-extrabold leading-[0.85] tracking-tighter text-[#1A202C] mb-6">
+                        OutboundAI
+                    </h1>
+
+                    <div class="flex flex-col gap-2 max-w-xl">
+                        <p class="text-lg font-plex font-normal text-[#1A202C]/60 leading-snug">
+                            Automated AI Outbound Calling
+                        </p>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-jakarta font-bold uppercase tracking-widest text-[#1A202C]/30">Engineered with</span>
+                            <span class="px-3 py-1 rounded-full bg-white hairline-border text-[11px] font-plex font-bold text-[#319795]">Gemini</span>
+                            <span class="text-[#1A202C]/20">&</span>
+                            <span class="px-3 py-1 rounded-full bg-white hairline-border text-[11px] font-plex font-bold text-[#319795]">LiveKit</span>
+                        </div>
+                    </div>
+                    <div class="mt-8 w-32 h-[2px] bg-[#319795]/20"></div>
+                </div>
+
+                <div class="flex items-center gap-6 opacity-60">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-jakarta font-bold uppercase tracking-[0.3em] text-[#1A202C]/30">Availability</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-[#319795]"></div>
+                            <span class="text-[11px] font-plex font-bold text-[#1A202C]/60">Systems Operational</span>
+                        </div>
+                    </div>
+                    <div class="h-10 w-[1px] bg-[#1A202C]/10"></div>
+                    <div class="text-[10px] font-plex text-[#1A202C]/40 leading-tight">
+                        CONFIDENTIAL<br>Q3 RELEASE v1.0.4
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Whitish layered container with Team details -->
+            <div class="w-5/12 flex items-center justify-center relative z-10 h-full">
+                <!-- Stacked Whitish Decorative Card Layer behind -->
+                <div class="absolute inset-4 -mr-2 mt-8 bg-white/40 border border-white/60 rounded-3xl -rotate-2 pointer-events-none shadow-sm"></div>
+                
+                <!-- Main elevated panel -->
+                <div class="relative bg-white/90 backdrop-blur-md border-2 border-white rounded-3xl p-8 shadow-2xl shadow-slate-200/50 w-full flex flex-col justify-between h-[520px]">
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="text-[10px] font-jakarta font-bold uppercase tracking-widest text-[#319795]">Project Team</span>
+                            <span class="text-[10px] font-mono text-[#1A202C]/40">Active Contributors</span>
+                        </div>
+                        <h3 class="text-xl font-jakarta font-extrabold text-[#1A202C] mb-2">Hackathon Presenters</h3>
+                        <p class="text-xs text-slate-500 font-inter mb-6">The engineers and designers behind OutboundAI realtime voice agent.</p>
+                        
+                        <!-- Team grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Manoj Kumar -->
+                            <div class="p-3.5 bg-white border border-slate-100 rounded-2xl flex items-center gap-3 shadow-xs hover:border-[#319795]/20 transition-all">
+                                <!-- <img src="" class="w-10 h-10 rounded-full border border-slate-100 bg-slate-50" alt="Manoj Kumar"> -->
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-800 leading-tight">Manoj Kumar</span>
+                                    <span class="text-[9px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">Lead AI Developer</span>
+                                </div>
+                            </div>
+
+                            <!-- Dikesh Patel -->
+                            <div class="p-3.5 bg-white border border-slate-100 rounded-2xl flex items-center gap-3 shadow-xs hover:border-[#319795]/20 transition-all">
+                                <!-- <img src="" class="w-10 h-10 rounded-full border border-slate-100 bg-slate-50" alt="Dikesh Patel"> -->
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-800 leading-tight">Dikesh Patel</span>
+                                    <span class="text-[9px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">Product Engineer</span>
+                                </div>
+                            </div>
+
+                            <!-- Shreyansh Gosawmi -->
+                            <div class="p-3.5 bg-white border border-slate-100 rounded-2xl flex items-center gap-3 shadow-xs hover:border-[#319795]/20 transition-all">
+                                <!-- <img src="https://i.pravatar.cc/100?u=shreyansh" class="w-10 h-10 rounded-full border border-slate-100 bg-slate-50" alt="Shreyansh Gosawmi"> -->
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-800 leading-tight">S. Gosawmi</span>
+                                    <span class="text-[9px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">System Architect</span>
+                                </div>
+                            </div>
+
+                            <!-- Aman Sonwami -->
+                            <div class="p-3.5 bg-white border border-slate-100 rounded-2xl flex items-center gap-3 shadow-xs hover:border-[#319795]/20 transition-all">
+                                <!-- <img src="https://i.pravatar.cc/100?u=aman" class="w-10 h-10 rounded-full border border-slate-100 bg-slate-50" alt="Aman Sonwami"> -->
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-800 leading-tight">Aman Sonwami</span>
+                                    <span class="text-[9px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">UX Designer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tech Tags inside card -->
+                    <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Realtime Engine</span>
+                        <div class="flex gap-1.5">
+                            <span class="text-[9px] font-mono bg-[#319795]/5 text-[#319795] px-2 py-0.5 rounded">Python</span>
+                            <span class="text-[9px] font-mono bg-[#319795]/5 text-[#319795] px-2 py-0.5 rounded">FastAPI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Slide 2: Problem Statement -->
+    <div id="slide-2" class="slide-container">
+        <section class="relative w-full h-full bg-white overflow-hidden flex flex-row">
+            <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
+                <div class="absolute top-0 right-0 w-[800px] h-[800px]">
+                    <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/windy-stripes.svg" class="w-full h-full object-cover" style="color: #319795;">
+                </div>
+            </div>
+
+            <div class="w-2/5 flex flex-col justify-center px-16">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="w-12 h-[1px] bg-[#319795]"></span>
+                        <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-[#319795]/80 font-dm">
+                            Problem Definition — 02
+                        </span>
+                    </div>
+                    <div>
+                        <h1 class="text-6xl font-black leading-[0.95] tracking-tighter text-[#1A202C]">
+                            Manual <br>
+                            calling <br>
+                            is <br>
+                            <span class="text-[#319795]">broken.</span>
+                        </h1>
+                    </div>
+                    <p class="text-sm text-slate-500 font-dm leading-relaxed max-w-xs">
+                        Traditional outbound operations are hitting a wall of scalability, efficiency, and human fatigue.
+                    </p>
+                </div>
+            </div>
+
+            <div class="w-3/5 bg-[#F5F7FA] flex items-center justify-center p-12">
+                <div class="grid grid-cols-2 gap-4 w-full">
+                    <!-- Stat 1 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-dm">Operational Overhead</p>
+                                <h3 class="text-3xl font-bold tracking-tighter text-[#1A202C]">+142%</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-[#319795]/10 flex items-center justify-center">
+                                <i class="ti ti-currency-dollar text-[#319795] text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="h-12 w-full">
+                            <svg viewBox="0 0 100 40" class="w-full h-full" preserveAspectRatio="none">
+                                <path d="M 0,35 Q 25,25 50,30 T 100,5" fill="none" stroke="#319795" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-dm leading-tight">
+                            Costs scale linearly with volume, making growth prohibitively expensive.
+                        </p>
+                    </div>
+
+                    <!-- Stat 2 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-dm">Conversion Efficiency</p>
+                                <h3 class="text-3xl font-bold tracking-tighter text-[#1A202C]">-44%</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                                <i class="ti ti-target-off text-red-500 text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="h-12 w-full">
+                            <svg viewBox="0 0 100 40" class="w-full h-full" preserveAspectRatio="none">
+                                <path d="M 0,10 Q 30,15 60,8 T 100,35" fill="none" stroke="#ef4444" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-dm leading-tight">
+                            Manual fatigue leads to declining connection rates and lower quality conversations.
+                        </p>
+                    </div>
+
+                    <!-- Stat 3 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-dm">Response Latency</p>
+                                <h3 class="text-3xl font-bold tracking-tighter text-[#1A202C]">28m</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                                <i class="ti ti-hourglass-empty text-amber-500 text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="h-12 w-full">
+                            <svg viewBox="0 0 100 40" class="w-full h-full" preserveAspectRatio="none">
+                                <path d="M 0,35 Q 25,20 50,15 T 100,5" fill="none" stroke="#f59e0b" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-dm leading-tight">
+                            Golden window (5 min) missed in 85% of cases due to manual limitations.
+                        </p>
+                    </div>
+
+                    <!-- Stat 4 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-dm">Annual Attrition</p>
+                                <h3 class="text-3xl font-bold tracking-tighter text-[#1A202C]">68%</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-[#319795]/10 flex items-center justify-center">
+                                <i class="ti ti-users-minus text-[#319795] text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="h-12 w-full">
+                            <svg viewBox="0 0 100 40" class="w-full h-full" preserveAspectRatio="none">
+                                <path d="M 0,30 Q 35,25 70,15 T 100,10" fill="none" stroke="#319795" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-dm leading-tight">
+                            High-stress repetitive tasks lead to massive turnover and constant retraining.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-6 left-16 right-16 flex justify-between items-end pointer-events-none">
+                <div class="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300 font-dm">
+                    Hackathon Project / AI Outbound
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-12 h-1 bg-slate-100"></div>
+                    <div class="w-12 h-1 bg-[#1A202C]"></div>
+                    <div class="w-12 h-1 bg-slate-100"></div>
+                    <div class="w-12 h-1 bg-slate-100"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Slide 3: Proposed Solution -->
+    <div id="slide-3" class="slide-container">
+        <section class="relative w-full h-full bg-[#F5F7FA] text-[#1A202C] font-dm p-12 flex flex-col overflow-hidden">
+            <div class="absolute top-0 right-0 w-96 h-96 opacity-[0.03] pointer-events-none">
+                <img src="https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/lorc/windy-stripes.svg" class="w-full h-full rotate-45">
+            </div>
+
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="h-[1px] w-8 bg-[#319795]"></div>
+                    <span class="text-[#319795] font-bold tracking-[0.2em] uppercase text-[10px]">Slide 03 // Proposed Solution</span>
+                </div>
+                <h1 class="text-4xl font-extrabold font-jakarta tracking-tight leading-tight">
+                    The Autonomous <span class="text-[#319795]">Voice Layer</span>
+                </h1>
+                <p class="text-slate-500 mt-2 text-sm max-w-xl">
+                    A multimodal architecture designed for enterprise-grade voice interactions with sub-second latency and deep integration.
+                </p>
+            </div>
+
+            <div class="grow grid grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="hairline-border bg-white p-6 flex flex-col justify-between shadow-soft">
+                    <div>
+                        <div class="w-10 h-10 rounded-lg bg-[#319795]/10 flex items-center justify-center mb-4">
+                            <i class="ti ti-cpu text-[#319795] text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold font-jakarta mb-1">Autonomous Sales Agents</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Native-audio reasoning agents that manage complex end-to-end sales conversations autonomously.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100">
+                        <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Status: Production</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Interactive/Graphic Model Mockup -->
+                <div class="flex flex-col justify-between bg-white hairline-border shadow-soft p-6">
+                    <div>
+                        <div class="w-10 h-10 rounded-lg bg-[#319795]/10 flex items-center justify-center mb-4">
+                            <i class="ti ti-zap text-[#319795] text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold font-jakarta mb-1">Real-time Latency <span class="text-[#319795]">&lt; 500ms</span></h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Optimized LiveKit + SIP stack ensures human-parity response times for seamless, flowing speech.
+                        </p>
+                    </div>
+                    <div class="flex items-end gap-1.5 h-16 bg-[#F5F7FA] p-3 rounded-lg">
+                        <div class="w-1.5 h-4 bg-[#319795] rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-1.5 h-8 bg-[#319795] rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        <div class="w-1.5 h-12 bg-[#319795] rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+                        <div class="w-1.5 h-6 bg-[#319795] rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        <div class="w-1.5 h-10 bg-[#319795] rounded-full animate-bounce" style="animation-delay: 0.5s"></div>
+                        <div class="w-1.5 h-5 bg-[#319795] rounded-full animate-bounce" style="animation-delay: 0.6s"></div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="hairline-border bg-white p-6 flex flex-col justify-between shadow-soft">
+                    <div>
+                        <div class="w-10 h-10 rounded-lg bg-[#319795]/10 flex items-center justify-center mb-4">
+                            <i class="ti ti-database text-[#319795] text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold font-jakarta mb-1">Seamless CRM Sync</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Automatic lead qualification and direct write-back to Supabase, Salesforce, and HubSpot.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-1 bg-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">Supabase</span>
+                        <span class="px-2 py-1 bg-slate-100 rounded text-[9px] font-bold text-slate-500 uppercase">Cal.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex items-center justify-between opacity-50">
+                <div class="flex items-center gap-4">
+                    <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Proprietary Architecture</span>
+                    <div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                    <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Draft v1.0.4</span>
+                </div>
+                <div class="text-xl font-black font-jakarta tracking-tighter text-[#1A202C]">
+                    OUTBOUND<span class="text-[#319795]">AI</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Slide 4: Technology Stack -->
+    <div id="slide-4" class="slide-container">
+        <section class="relative w-full h-full bg-white font-plex overflow-hidden flex flex-col p-12">
+            <div class="absolute inset-0 bg-pattern pointer-events-none"></div>
+
+            <header class="relative z-10 flex justify-between items-end mb-6">
+                <div class="relative pl-6 left-accent">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[#319795] font-heading font-bold tracking-[0.2em] text-[9px] uppercase">Architecture Slide 04</span>
+                    </div>
+                    <h1 class="text-4xl font-heading font-bold tracking-tight text-[#1A202C]">
+                        Technology <span class="text-[#319795]">Stack</span>
+                    </h1>
+                </div>
+                <div class="text-right pb-1">
+                    <div class="text-[#1A202C]/40 font-heading text-[9px] uppercase tracking-widest font-bold">Project OutboundAI</div>
+                    <div class="text-[#319795] font-heading text-[11px] font-semibold mt-1">Core Architecture v1.0.0</div>
+                </div>
+            </header>
+
+            <main class="flex-grow relative z-10 grid grid-cols-12 gap-8 items-center">
+                <!-- Stack Grid -->
+                <div class="col-span-5 flex flex-col justify-center">
+                    <div class="mb-6">
+                        <h3 class="text-sm font-heading font-bold text-[#1A202C] mb-1 uppercase tracking-wider">Foundation Layers</h3>
+                        <p class="text-xs text-[#1A202C]/60 leading-relaxed">Leveraging best-in-class cloud infrastructure and AI models to ensure low-latency voice interactions.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-[#F5F7FA] rounded-2xl hairline-border flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#319795] shadow-sm">
+                                <i class="ti ti-sparkles text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-[#1A202C]">Google Gemini</span>
+                                <span class="block text-[8px] text-[#1A202C]/40 uppercase tracking-widest">LLM Brain</span>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[#F5F7FA] rounded-2xl hairline-border flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#319795] shadow-sm">
+                                <i class="ti ti-broadcast text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-[#1A202C]">LiveKit</span>
+                                <span class="block text-[8px] text-[#1A202C]/40 uppercase tracking-widest">Realtime RTCC</span>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[#F5F7FA] rounded-2xl hairline-border flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#319795] shadow-sm">
+                                <i class="ti ti-database text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-[#1A202C]">Supabase</span>
+                                <span class="block text-[8px] text-[#1A202C]/40 uppercase tracking-widest">PostgreSQL</span>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[#F5F7FA] rounded-2xl hairline-border flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#319795] shadow-sm">
+                                <i class="ti ti-phone text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-[#1A202C]">Twilio & VoIP</span>
+                                <span class="block text-[8px] text-[#1A202C]/40 uppercase tracking-widest">Gateway</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Terminal Mockup -->
+                <div class="col-span-7">
+                    <div class="bg-[#F5F7FA] hairline-border rounded-[12px] overflow-hidden flex flex-col h-[380px]">
+                        <div class="h-8 px-4 flex items-center justify-between border-b border-[#d0d0cc] bg-white">
+                            <div class="flex gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#28C840]"></div>
+                            </div>
+                            <div class="text-[9px] font-mono text-[#1A202C]/40">agent.py</div>
+                            <div class="w-10"></div>
+                        </div>
+                        <div class="p-6 flex-grow font-mono text-xs leading-normal overflow-hidden text-slate-700">
+                            <p class="text-[#319795] mb-2">$ python run_agent.py --realtime</p>
+                            <p class="text-blue-600">async def <span class="text-purple-600">entrypoint</span>(ctx: agents.JobContext):</p>
+                            <p class="pl-4">agent = agents.VoicePipelineAgent(</p>
+                            <p class="pl-8">vad=silero.VAD.load(),</p>
+                            <p class="pl-8">stt=deepgram.STT(),</p>
+                            <p class="pl-8 text-orange-600">llm=google.LLM(model="gemini-2.0-flash"),</p>
+                            <p class="pl-8">tts=google.TTS()</p>
+                            <p class="pl-4">)</p>
+                            <p class="pl-4 text-slate-400"># Start real-time outbound session</p>
+                            <p class="pl-4 text-emerald-600">await agent.start(ctx.room)</p>
+                            <p class="mt-2 text-emerald-600 font-bold">[INFO] LiveKit Voice Pipeline connected to Room: session_active</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </section>
+    </div>
+
+    <!-- Slide 5: Implementation Roadmap -->
+    <div id="slide-5" class="slide-container">
+        <section class="bg-white text-[#1A202C] w-full h-full font-sans relative overflow-hidden flex flex-col p-12">
+            <header class="mb-10 flex justify-between items-end">
+                <div class="max-w-xl">
+                    <div class="inline-flex items-center gap-2 mb-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#319795]"></span>
+                        <span class="text-[#319795] font-jakarta text-[10px] tracking-[0.2em] uppercase font-bold">Implementation Phase</span>
+                    </div>
+                    <h1 class="text-4xl font-jakarta font-bold tracking-tight text-[#1A202C]">Development Roadmap</h1>
+                    <p class="text-[#1A202C]/60 font-inter text-sm mt-2 font-light leading-relaxed">
+                        A strategic four-stage deployment plan for our <span class="text-[#319795] font-medium">Gemini-powered</span> voice infrastructure.
+                    </p>
+                </div>
+                <div class="text-right">
+                    <span class="text-6xl font-jakarta font-bold text-[#F5F7FA] leading-none">05</span>
+                </div>
+            </header>
+
+            <div class="flex-grow flex justify-center items-start">
+                <div class="relative w-full max-w-4xl grid grid-cols-[auto_1fr] gap-x-8">
+                    <div class="relative flex flex-col items-center pt-2">
+                        <div class="roadmap-line opacity-20"></div>
+                        <div class="h-full flex flex-col justify-between items-center py-2">
+                            <div class="phase-dot" style="margin-top: 5px;"></div>
+                            <div class="phase-dot" style="margin-top: 60px;"></div>
+                            <div class="phase-dot" style="margin-top: 60px;"></div>
+                            <div class="phase-dot" style="margin-top: 60px; margin-bottom: 5px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="phase-card p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div class="flex items-baseline gap-4 mb-1">
+                                <span class="font-jakarta text-[10px] font-bold text-[#319795] tracking-widest uppercase">Phase 01</span>
+                                <h3 class="text-lg font-jakarta font-bold text-[#1A202C]">Voice Integration</h3>
+                            </div>
+                            <p class="text-[#1A202C]/60 text-xs max-w-2xl">
+                                Infrastructure setup using LiveKit for low-latency voice streams and professional SIP trunking integration to handle high-concurrency calls.
+                            </p>
+                        </div>
+                        <div class="phase-card p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div class="flex items-baseline gap-4 mb-1">
+                                <span class="font-jakarta text-[10px] font-bold text-[#319795] tracking-widest uppercase">Phase 02</span>
+                                <h3 class="text-lg font-jakarta font-bold text-[#1A202C]">Gemini Fine-tuning</h3>
+                            </div>
+                            <p class="text-[#1A202C]/60 text-xs max-w-2xl">
+                                Fine-tuning Gemini 1.5 Pro with specialized system prompts and context-rich datasets for natural, human-like sales dialogue.
+                            </p>
+                        </div>
+                        <div class="phase-card p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div class="flex items-baseline gap-4 mb-1">
+                                <span class="font-jakarta text-[10px] font-bold text-[#319795] tracking-widest uppercase">Phase 03</span>
+                                <h3 class="text-lg font-jakarta font-bold text-[#1A202C]">Audio Optimization</h3>
+                            </div>
+                            <p class="text-[#1A202C]/60 text-xs max-w-2xl">
+                                End-to-end stream optimization and noise cancellation to achieve sub-500ms latency for seamless real-time human-AI interaction.
+                            </p>
+                        </div>
+                        <div class="phase-card p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div class="flex items-baseline gap-4 mb-1">
+                                <span class="font-jakarta text-[10px] font-bold text-[#319795] tracking-widest uppercase">Phase 04</span>
+                                <h3 class="text-lg font-jakarta font-bold text-[#1A202C]">CRM & Calendar Tools</h3>
+                            </div>
+                            <p class="text-[#1A202C]/60 text-xs max-w-2xl">
+                                Full lifecycle management through seamless data synchronization with internal CRMs and automated lead booking via Cal.com.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Slide 6: Expected Impact -->
+    <div id="slide-6" class="slide-container">
+        <section class="relative w-full h-full bg-white flex flex-col p-12 overflow-hidden text-[#1A202C]">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-stripes pointer-events-none"></div>
+
+            <nav class="relative z-10 flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-[2px] bg-[#319795]"></div>
+                    <span class="text-[9px] font-black tracking-[0.4em] uppercase text-gray-400">Slide 06 // ROI Analysis</span>
+                </div>
+                <span class="text-[9px] font-bold text-gray-300 tracking-widest uppercase">Proprietary AI Voice Architecture</span>
+            </nav>
+
+            <header class="relative z-10 mb-8 max-w-2xl">
+                <h1 class="text-4xl font-black tracking-tighter uppercase leading-none">
+                    Expected <span class="text-[#319795]">Impact</span>
+                </h1>
+                <p class="mt-2 text-xs font-dm text-gray-500 max-w-xl leading-relaxed">
+                    Quantifiable performance gains and cost efficiencies realized through our low-latency AI voice integration.
+                </p>
+            </header>
+
+            <div class="relative z-10 grid grid-cols-12 gap-6 items-end grow mb-4">
+                <div class="col-span-3 flex flex-col">
+                    <div class="bg-[#F5F7FA] p-6 rounded-2xl hairline-border flex flex-col justify-between aspect-square">
+                        <div class="flex justify-between items-start mb-2">
+                             <i class="ti ti-trending-down text-2xl text-[#319795] opacity-50"></i>
+                             <span class="text-[9px] font-black bg-white px-2 py-1 rounded hairline-border text-gray-400">KPI 01</span>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-black tracking-tight text-[#1A202C] mb-1">80%</div>
+                            <div class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 font-dm">Lower Cost</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-6 flex flex-col items-center justify-center text-center">
+                    <div class="relative">
+                        <div class="absolute inset-0 blur-3xl bg-[#319795] opacity-5 scale-150"></div>
+                        <div class="relative z-10 text-[100px] font-black leading-none text-[#319795] tracking-tighter">300%</div>
+                    </div>
+                    <div class="mt-4 text-lg font-black uppercase tracking-[0.4em] text-[#1A202C]">
+                        Call Throughput
+                    </div>
+                </div>
+
+                <div class="col-span-3 flex flex-col">
+                    <div class="bg-[#F5F7FA] p-6 rounded-2xl hairline-border flex flex-col justify-between aspect-square text-right">
+                        <div class="flex justify-between items-start mb-2 flex-row-reverse">
+                             <i class="ti ti-clock-check text-2xl text-[#319795] opacity-50"></i>
+                             <span class="text-[9px] font-black bg-white px-2 py-1 rounded hairline-border text-gray-400">KPI 02</span>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-black tracking-tight text-[#1A202C] mb-1">24/7</div>
+                            <div class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 font-dm">Availability</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Slide 7: Future Scope -->
+    <div id="slide-7" class="slide-container">
+        <section class="w-full h-full bg-white text-[#1A202C] font-sans relative overflow-hidden flex flex-col p-12">
+            <div class="flex justify-between items-center relative z-50 mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-[#319795] rounded-sm flex items-center justify-center">
+                        <i class="ti ti-rocket text-white text-lg"></i>
+                    </div>
+                    <span class="font-dm font-bold text-lg tracking-tight uppercase">Outbound<span class="text-[#319795]">AI</span></span>
+                </div>
+                <div class="text-[#A0AEC0] font-mono text-[10px] tracking-widest uppercase">Slide 07 // Future Scope</div>
+            </div>
+
+            <div class="flex-grow flex flex-col items-center justify-center relative z-10">
+                <div class="text-center mb-10 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F7FA] border border-[#E2E8F0] mb-4">
+                        <span class="w-2 h-2 rounded-full bg-[#319795] animate-pulse"></span>
+                        <span class="text-[9px] font-bold tracking-widest uppercase text-[#718096]">Roadmap 2025-2026</span>
+                    </div>
+                    <h2 class="text-4xl font-dm font-bold mb-3 tracking-tight text-[#1A202C]">
+                        The Next <span class="text-[#319795]">Frontier</span>
+                    </h2>
+                    <p class="text-sm text-[#718096] font-medium leading-relaxed font-inter">
+                        Scaling our cognitive ecosystem to break language barriers and understand the deep emotional nuances of every conversation.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-8 w-full max-w-4xl">
+                    <div class="next-step-card flex flex-col items-center text-center group">
+                        <div class="icon-container w-12 h-12 rounded-xl bg-[#F5F7FA] flex items-center justify-center mb-4 border border-[#E2E8F0]">
+                            <i class="ti ti-mood-puzzled text-2xl text-[#319795]"></i>
+                        </div>
+                        <h3 class="text-lg font-dm font-bold mb-2 text-[#1A202C]">Emotion Analytics</h3>
+                        <p class="text-xs text-[#718096] leading-relaxed">
+                            Cognitive analysis of pitch and tone to identify buyer hesitation or excitement in real-time.
+                        </p>
+                    </div>
+                    <div class="next-step-card flex flex-col items-center text-center group">
+                        <div class="icon-container w-12 h-12 rounded-xl bg-[#F5F7FA] flex items-center justify-center mb-4 border border-[#E2E8F0]">
+                            <i class="ti ti-language-hiragana text-2xl text-[#319795]"></i>
+                        </div>
+                        <h3 class="text-lg font-dm font-bold mb-2 text-[#1A202C]">Multilingual Support</h3>
+                        <p class="text-xs text-[#718096] leading-relaxed">
+                            Native-grade fluency with dialect-specific cultural nuances for seamless global expansion.
+                        </p>
+                    </div>
+                    <div class="next-step-card flex flex-col items-center text-center group">
+                        <div class="icon-container w-12 h-12 rounded-xl bg-[#F5F7FA] flex items-center justify-center mb-4 border border-[#E2E8F0]">
+                            <i class="ti ti-brain text-2xl text-[#319795]"></i>
+                        </div>
+                        <h3 class="text-lg font-dm font-bold mb-2 text-[#1A202C]">Agent Autonomy</h3>
+                        <p class="text-xs text-[#718096] leading-relaxed">
+                            Self-improving agents that learn from top-performing human closers via feedback loops.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 7 Footer with updated Team Members -->
+            <div class="px-16 pb-6 pt-4 border-t border-[#F5F7FA] relative z-20 flex justify-between items-end mt-auto">
+                <div class="flex gap-8">
+                    <!-- Manoj Kumar -->
+                    <div class="flex items-center gap-3 group cursor-default">
+                        <div class="relative">
+                            <img src="https://i.pravatar.cc/100?u=manoj" class="w-10 h-10 rounded-full border-2 border-white shadow-sm transition-transform group-hover:scale-105" alt="Manoj Kumar">
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold font-dm text-[#1A202C]">Manoj Kumar</span>
+                            <span class="text-[9px] font-medium text-[#A0AEC0] uppercase tracking-wider">Lead AI Developer</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Dikesh Patel -->
+                    <div class="flex items-center gap-3 group cursor-default">
+                        <div class="relative">
+                            <img src="https://i.pravatar.cc/100?u=dikesh" class="w-10 h-10 rounded-full border-2 border-white shadow-sm transition-transform group-hover:scale-105" alt="Dikesh Patel">
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold font-dm text-[#1A202C]">Dikesh Patel</span>
+                            <span class="text-[9px] font-medium text-[#A0AEC0] uppercase tracking-wider">Product Engineer</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Shreyansh Gosawmi -->
+                    <div class="flex items-center gap-3 group cursor-default">
+                        <div class="relative">
+                            <img src="https://i.pravatar.cc/100?u=shreyansh" class="w-10 h-10 rounded-full border-2 border-white shadow-sm transition-transform group-hover:scale-105" alt="Shreyansh Gosawmi">
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold font-dm text-[#1A202C]">S. Gosawmi</span>
+                            <span class="text-[9px] font-medium text-[#A0AEC0] uppercase tracking-wider">System Architect</span>
+                        </div>
+                    </div>
+
+                    <!-- Aman Sonwami -->
+                    <div class="flex items-center gap-3 group cursor-default">
+                        <div class="relative">
+                            <img src="https://i.pravatar.cc/100?u=aman" class="w-10 h-10 rounded-full border-2 border-white shadow-sm transition-transform group-hover:scale-105" alt="Aman Sonwami">
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#319795] border-2 border-white rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold font-dm text-[#1A202C]">Aman Sonwami</span>
+                            <span class="text-[9px] font-medium text-[#A0AEC0] uppercase tracking-wider">UX Designer</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-[9px] text-[#A0AEC0] uppercase tracking-[0.2em] mb-0.5 font-bold">Version</p>
+                        <p class="text-xs font-dm font-bold text-[#1A202C]">1.0.4-LATEST</p>
+                    </div>
+                    <div class="w-px h-6 bg-[#E2E8F0]"></div>
+                    <div class="text-right">
+                        <p class="text-[9px] text-[#A0AEC0] uppercase tracking-[0.2em] mb-0.5 font-bold">Project</p>
+                        <p class="text-xs font-dm font-bold text-[#319795]">OUTBOUND_AI</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- On-Screen Presentation Controls Overlay -->
+    <div class="controls-overlay">
+        <button class="control-btn" onclick="prevSlide()">
+            <i class="ti ti-arrow-left"></i> Prev
+        </button>
+        <span id="slide-indicator" class="text-sm font-semibold tracking-wider">Slide 1 / 7</span>
+        <button class="control-btn" onclick="nextSlide()">
+            Next <i class="ti ti-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 7;
+
+        function updateSlideDisplay() {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById(`slide-${i}`).classList.remove('active');
+            }
+            // Show current slide
+            document.getElementById(`slide-${currentSlide}`).classList.add('active');
+            // Update indicator
+            document.getElementById('slide-indicator').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlideDisplay();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlideDisplay();
+            }
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === 'Space') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Resize function to fit slide beautifully inside viewport
+        function resizePresentation() {
+            const slideWidth = 1280;
+            const slideHeight = 720;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            const scaleX = windowWidth / slideWidth;
+            const scaleY = windowHeight / slideHeight;
+            const scale = Math.min(scaleX, scaleY) * 0.95; // 5% margin padding
+
+            const slides = document.querySelectorAll('.slide-container');
+            slides.forEach(slide => {
+                slide.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            });
+        }
+
+        window.addEventListener('resize', resizePresentation);
+        window.addEventListener('load', resizePresentation);
+        resizePresentation();
+    </script>
+</body>
+</html>
